@@ -1,0 +1,42 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/vovasqu/YandexDisk/4_course/nets/repository/udp/prod/client_new.cpp
+utils.h
+/home/vovasqu/YandexDisk/4_course/nets/repository/udp/prod/utils.h
+
+/home/vovasqu/YandexDisk/4_course/nets/repository/udp/prod/utils.h
+iostream
+-
+map
+-
+vector
+-
+pthread.h
+-
+algorithm
+-
+unistd.h
+-
+stdlib.h
+-
+string.h
+-
+sys/socket.h
+-
+netinet/in.h
+-
+sys/types.h
+-
+netinet/in.h
+-
+arpa/inet.h
+-
+errno.h
+-
+

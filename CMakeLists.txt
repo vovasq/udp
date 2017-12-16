@@ -3,7 +3,7 @@ project(udp)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCE_FILES server.cpp utils.h)
+set(SOURCE_FILES prod/server.cpp prod/utils.h)
 
 #LINK_DIRECTORIES(spdlog)
 
@@ -14,11 +14,11 @@ set(SOURCE_FILES server.cpp utils.h)
 
 set(CMAKE_CXX_FLAGS "-fpermissive")
 
-add_executable(client client.cpp utils.h)
+add_executable(client prod/client.cpp prod/utils.h)
 TARGET_LINK_LIBRARIES(client pthread)
 
-add_executable(udp ${SOURCE_FILES})
-TARGET_LINK_LIBRARIES(udp pthread)
+add_executable(server ${SOURCE_FILES})
+TARGET_LINK_LIBRARIES(server pthread)
 
 
 #link_libraries(ws2_32 wsock32)

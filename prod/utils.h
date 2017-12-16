@@ -33,28 +33,23 @@
 #define SERVER          "S"
 
 // comands
-
 #define COMMAND_LEN 4
 #define ERROR           "eror"
 #define EXIT            "exit"
 #define LOGIN           "logi"
 #define GETLIST         "getl"
 #define RISE            "rise"
-#define BROADCAST       "brod"
-#define PASS            "pass"
 #define SHUTDOWN        "shut"
 #define STOP            "stop"
-#define DELETEITEM      "deli"
 #define NEWITEM         "newi"
 #define SENDLIST        "sndl"
-#define APPROVE         "aprv"
 #define ACKNOWLEDGE     "ackn"
-#define DENY            "deny"
+#define BROADCAST       "brod"
+#define APPROVE         "aprv"
 #define START           "strt"
-
+#define DONE            "done"
 
 // errors
-
 #define ERR_MANAGER_ALREADY_EXISTS  "MAE"
 #define ERR_MANAGER_WRONG_PSWD      "WMP"
 #define ERR_USER_ALREADY_EXISTS     "UAE"
@@ -63,20 +58,21 @@
 #define ERR_ITEM_ALREADY_SOLD       "IAS"
 
 
+// #include "utils.h"
+
 const int MAX_MESSAGE_SIZE = 256;
 const int MAX_PASSWORD_SIZE = 100;
-const int MAX_LOGIN_SIZE = 100;
+const int MAX_login_SIZE = 100;
 const int MAX_IT_NAME_SIZE = 100;
 const int MAX_IT_PRICE_SIZE = 4;
-const int MAX_HOLDER_NAME = 50;
 const int BROADCAST_ALL = -1;
+
 
 const int  COMMAND_NUM = 4;
 const int ITEM_LOGIN_LEN = 100;
 const int HOLDER_login_LEN = 100;
 const char * manager_name  = "manager";
 const char *manager_password = "1234";
-
 
 
 //TODO: id is stored as a key in a clietns_map so id is useless in struct ???

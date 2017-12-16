@@ -80,6 +80,7 @@ bool kill_client(int id) {
     clients.erase(it);
     pthread_mutex_unlock(&vector_clients_mutex);
     return true;
+
 }
 
 void showCommands() {
@@ -97,6 +98,7 @@ void showClients() {
         int i = 1;
         for (auto it : clients) {
 //            i++;
+//            TODO:
             std::cout << "client id" << i++ << " thread: " //<< it.first
                       << " number of socket: " << it.second << std::endl;
         }
@@ -112,6 +114,7 @@ int readn(int sock, char *buff, int size, int flag) {
         for (int j = 0; j < size; ++j) {
             temp_buff[j] = 0;
         }
+//        TODO:
         int temp_recv = recv(sock, temp_buff, size, 0);
         if (temp_recv <= 0)
             return -1;
@@ -209,48 +212,6 @@ void broadcastSend(int except_sock, std::string data){
         }
 }
 
-void *sons_start(void * param){
-
-    sleep(20);
-//    std::cout << "sons start " << std::endl;
-    std::string data((char *) param);
-//    std::cout << "sons start  char * ok " << std::endl;
-    std::vector<std::string> str_vector = split(data, " ");
-    const char * bufa = str_vector[str_vector.size() - 1 ].c_str();
-    int user_id = atoi(bufa);
-//    std::cout << user_id << "kekekek" << std::endl;
-    str_vector.pop_back();
-//    std::cout << user_id << "udalili one" << std::endl;
-    const char * bufa1 = str_vector[str_vector.size() - 1 ].c_str();
-    int item_id = atoi(bufa1);
-//    std::cout << item_id << "kekekek" << std::endl;
-//    str_vector.erase(str_vector.end());
-    str_vector.pop_back();
-//    std::cout << user_id << "udalili dva" << std::endl;
-
-    data = "";
-//    std::cout << "sons start " << user_id << std::endl;
-    if(items_map[item_id].holder_id != user_id)
-        pthread_exit(NULL);
-
-    for(auto it =  str_vector.begin(); it != str_vector.end(); ++it) {
-//        if(*it.compare())
-        data += *it;
-        data += " ";
-    }
-//    std::cout << "sons " << data << std::endl;
-    data += " ";
-    data += APPROVE;
-    broadcastSend(BROADCAST_ALL,data);
-
-    if(items_map.erase(item_id) != 1)
-        std::cout << "Error: with deleting" << std::endl;
-    else
-        std::cout << "OK: with deleting" << std::endl;
-
-    pthread_exit(NULL);
-}
-
 void *run_client(void *param) {
 //    SOCKET sock = (SOCKET *)param;
     bool isThisManager = false;
@@ -317,6 +278,7 @@ void *run_client(void *param) {
                 newClient.password = pswd;
                 clients_map.insert(std::pair<int, client>(newClient.id, newClient));
                 std::string data = USER;
+                char buf[30];
                 data += std::to_string(newClient.id);
                 std::string message = create_message(SERVER, ACKNOWLEDGE, data);
                 if (send(sock, message.c_str(), MAX_MESSAGE_SIZE, 0) != MAX_MESSAGE_SIZE)
@@ -349,6 +311,7 @@ void *run_client(void *param) {
 
             std::cout << "we have a message to send list of items" << std::endl;
 //            SENDLIST
+            char buf[30];
             std::string data = "";
             data += std::to_string(items_map.size());
             std::string message = create_message(SERVER, SENDLIST, data);
@@ -359,6 +322,7 @@ void *run_client(void *param) {
 
             pthread_mutex_lock(&map_items_mutex);
             for (auto it = items_map.begin(); it != items_map.end(); it++) {
+                char buf[30];
                 std::string data = "";
                 data += std::to_string(msg_number);
                 data += " ";
@@ -419,32 +383,43 @@ void *run_client(void *param) {
                 data += std::to_string(item_id);
                 data += " ";
                 data += std::to_string(user_id);
-
                 broadcastSend(sock,data);
-                pthread_t son;
-                pthread_attr_t attr;
-                pthread_attr_init(&attr);
-                pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-                pthread_create(&son, 0, sons_start, (void *) data.c_str());
-//                pthread_detach(son);
-//                pthread_create(&thrd_tmp, 0, run_client, (void *) (tmp_sock)
-//                sleep(20);
-//                if(items_map[item_id].holder_id != user_id)
-//                    continue;
-//                data += " ";
-//                data += APPROVE;
-//                broadcastSend(BROADCAST_ALL,data);
-//                if(items_map.erase(item_id) != 1)
-//                    std::cout << "Error: with deleting" << std::endl;
-            }
-            else{
+            }else{
                 std::string response = create_message(SERVER, ERROR, ERR_ITEM_WRONG_ID);
                 if (send(sock, response.c_str(), MAX_MESSAGE_SIZE, 0) != MAX_MESSAGE_SIZE)
                     std::cout << "error send" << std::endl;
                 pthread_mutex_unlock(&map_items_mutex);
             }
+
+        } else if (msg.compare(1, 4, DONE) == 0){
+            std::cout << "we get a request to done" << std::endl;
+            std::vector < std::string > item_split= split(msg.substr(5, MAX_MESSAGE_SIZE), " ");
+            int item_id = atoi(item_split[1].c_str());
+//                int new_price = atoi(item_id_and_price[2].c_str());
+            std::cout   << "done  item id = " << item_id
+                        << std::endl;
+            // check for such an id in items
+            pthread_mutex_lock(&map_items_mutex);
+            if(items_map.find(item_id) != items_map.end()) {
+                // check for such an price
+                int  user_id = items_map[item_id].holder_id;
+                char buf[30];
+                std::string data = "";
+                data += clients_map[user_id].login;
+                data += " ";
+                data += std::to_string(items_map[item_id].price);
+                data += " ";
+                data += std::to_string(item_id);
+                data += " ";
+                data += std::to_string(user_id);
+                data += " ";
+                data += APPROVE;
+                if(items_map.erase(item_id) == 1)
+                    std::cout << "item removed" << std::endl;
+                broadcastSend(sock,data);
+                pthread_mutex_unlock(&map_items_mutex);
+            }
 //            items_map.insert(std::pair<int, item>(newItem.id, newItem));
-            // TODO: send acknowledge of adding item
         }
 //        else if (msg.compare(1, 4, STOP) == 0){
 //
@@ -497,10 +472,9 @@ void *run_client(void *param) {
             std::cout <<"error unreachable sock # " << sock << std :: endl;
     }
     std::cout << "we finish " << sock << std::endl;
-//    TODO: if socket off than client remove from clients_map
-
 //    logger->info("we finish {}", sock);
     pthread_exit(NULL);
+
 }
 
 void *run_server(void *param) {
