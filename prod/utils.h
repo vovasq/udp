@@ -21,7 +21,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
-
+#include <netdb.h>
 
 
 #define DEFAULT_PORT 27015
@@ -33,6 +33,7 @@
 #define SERVER          "S"
 
 // comands
+
 #define COMMAND_LEN 4
 #define ERROR           "eror"
 #define EXIT            "exit"
@@ -60,12 +61,16 @@
 
 // #include "utils.h"
 
+
+#define NOBODY_ID -2
+#define MANAGER_ID -1
+
 const int MAX_MESSAGE_SIZE = 256;
 const int MAX_PASSWORD_SIZE = 100;
 const int MAX_login_SIZE = 100;
 const int MAX_IT_NAME_SIZE = 100;
 const int MAX_IT_PRICE_SIZE = 4;
-const int BROADCAST_ALL = -1;
+const int BROADCAST_ALL = -3;
 
 
 const int  COMMAND_NUM = 4;
@@ -77,10 +82,13 @@ const char *manager_password = "1234";
 
 //TODO: id is stored as a key in a clietns_map so id is useless in struct ???
 //TODO: isert Socket to struct of client
+
 struct client {
     std::string login;
     int id;
     std::string password;
+    struct sockaddr_in client_addr;
+    int count_DG = 0;
 };
 
 struct item {
@@ -89,7 +97,7 @@ struct item {
     int id;
     int price;
     // default id =  -1 matches to manager
-    int holder_id = -1;
+    int holder_id = MANAGER_ID;
 };
 
 
