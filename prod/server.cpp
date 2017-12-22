@@ -229,10 +229,13 @@ bool createAndSendMsg(int Socket, int userID, sockaddr_in clientaddr, const char
     if(userID >= 0){
         addUDP += std::to_string(userID);
         addUDP += " ";
+        udp_clients[userID].count_DG++;
         addUDP += std::to_string(udp_clients[userID].count_DG);
     } else if( userID == MANAGER_ID){
         addUDP += std::to_string(userID);
         addUDP += " ";
+        udp_clients[userID].count_DG++;
+//        std::cout << "cccc = " << udp_clients[userID].count_DG << std::endl;
         addUDP += std::to_string(udp_clients[userID].count_DG);
     } else{
         addUDP += std::to_string(NOBODY_ID);
@@ -244,12 +247,13 @@ bool createAndSendMsg(int Socket, int userID, sockaddr_in clientaddr, const char
               clientlen) < message.size()){
 
         std::cout << "error sending message"  << message << std::endl;
+        udp_clients[userID].count_DG--;
         return false;
     } else{
 
         if(userID != NOBODY_ID){
-            std::cout << "countDg++" << std::endl;
-            udp_clients[userID].count_DG++;
+//            std::cout << "countDg++" << std::endl;
+            std::cout << "countDg = " << udp_clients[userID].count_DG << std::endl;
         } else
             std::cout << "no countDG++" << std::endl;
         std::cout << "SUCCESS send message "  << message << std::endl;
@@ -646,11 +650,10 @@ void *run_server(void *param) {
                         newClient.id = MANAGER_ID;
                         newClient.password = pswd;
                         newClient.client_addr = clientaddr;
-                        newClient.count_DG += 1;
+//                        newClient.count_DG += 1;
                         //  std::cout << "new client id = " << newClient.id << std::endl;
                         clients_map.insert(std::pair<int, client>(newClient.id, newClient));
                         udp_clients.insert(std::pair<int, client>(newClient.id, newClient));
-
                         createAndSendMsg(MainSock, MANAGER_ID, manager_addr, SERVER, ACKNOWLEDGE, MANAGER);
                         broadcastSend(MainSock,START, MANAGER_ID);
                     } else {
@@ -670,7 +673,7 @@ void *run_server(void *param) {
                 newClient.id = generateUserID();
                 newClient.password = pswd;
                 newClient.client_addr = clientaddr;
-                newClient.count_DG += 1;
+//                newClient.count_DG += 1;
                 std::cout << "new client id = " << newClient.id << std::endl;
                 clients_map.insert(std::pair<int, client>(newClient.id, newClient));
                 udp_clients.insert(std::pair<int, client>(newClient.id, newClient));
@@ -679,6 +682,7 @@ void *run_server(void *param) {
             }
         }
         else if (msg.compare(1, 4, EXIT) == 0){ //&& msg.compare(0, 1, MANAGER) != 0) {
+
             std::cout << "User going to logout" << std::endl;
             std::cout << "Received message = " << msg << std::endl;
             std::vector<std::string> msgVector = split(msg.substr(5, MAX_MESSAGE_SIZE), " ");
@@ -686,6 +690,7 @@ void *run_server(void *param) {
 //            for (int i = 0; i < msgVector.size(); i++)
 //                std::cout << msgVector[i] << std::endl;
             int id = atoi(str_id.c_str());
+
             print_udp_clients();
             if (udp_clients.erase(id) == 1) { //clients_map.erase(id) == 1 &&
                 std::cout << "Successfully remove user with id = " << id << std::endl;
@@ -707,6 +712,7 @@ void *run_server(void *param) {
         }
         else if (msg.compare(1, 4, NEWITEM) == 0) {
 //            MANAGER, NEWITEM, item_name + " " + item_price
+            udp_clients[MANAGER_ID].count_DG += 1;
             std::cout << "we have a message to create new item" << std::endl;
             std::vector<std::string> name_and_price = split(msg.substr(5, MAX_MESSAGE_SIZE), " ");
             item newItem;
@@ -723,6 +729,7 @@ void *run_server(void *param) {
             int user_id = atoi(item_id_and_price[0].c_str());
             int item_id = atoi(item_id_and_price[2].c_str());
             int new_price = atoi(item_id_and_price[3].c_str());
+            udp_clients[user_id].count_DG += 1;
             std::cout << "user id = " << user_id
                       << " item id = " << item_id
                       << " new price = " << new_price
@@ -771,6 +778,7 @@ void *run_server(void *param) {
             std::cout << "we get a request to done" << std::endl;
             std::vector < std::string > item_split= split(msg.substr(5, MAX_MESSAGE_SIZE), " ");
             int item_id = atoi(item_split[2].c_str());
+            udp_clients[MANAGER_ID].count_DG += 1;
 //                int new_price = atoi(item_id_and_price[2].c_str());
             std::cout   << "done  item id = " << item_id
                         << std::endl;
@@ -794,7 +802,6 @@ void *run_server(void *param) {
             }
             pthread_mutex_unlock(&map_items_mutex);
             createAndSendMsg(MainSock, MANAGER_ID, clientaddr, SERVER, ERROR, ERR_ITEM_WRONG_ID);
-
         }
         else if (msg.compare(1, 4, GETLIST) == 0) {
 
@@ -804,16 +811,13 @@ void *run_server(void *param) {
 //            int countItems = items_map.size();
             pthread_mutex_lock(&map_items_mutex);
             std::string data = std::to_string(items_map.size());
-//            std::string message = create_message(SERVER, SENDLIST, data);
-////                std::cout << "MSG =  " << message << std::endl;
-//            if (send(sock, message.c_str(), MAX_MESSAGE_SIZE, 0) != MAX_MESSAGE_SIZE)
-//                std::cout << "error send" << std::endl;
             std::vector<std::string> msgVector = split(msg.substr(5, MAX_MESSAGE_SIZE), " ");
             int user_id = atoi(msgVector[0].c_str());
+            
+            udp_clients[user_id].count_DG += 1;
+            
             createAndSendMsg(MainSock, user_id, clientaddr, SERVER, SENDLIST, data);
-
             int msg_number = 1;
-
             for (auto it = items_map.begin(); it != items_map.end(); it++) {
                 std::string data = "";
                 data += std::to_string(msg_number);
@@ -832,34 +836,10 @@ void *run_server(void *param) {
                 msg_number++;
             }
             pthread_mutex_unlock(&map_items_mutex);
-
-
-//            items_map.insert(std::pair<int, item>(newItem.id, newItem));
         }
-////        else if (msg.compare(1, 4, STOP) == 0){
-////
-////        }
 
     }
-//    pthread_mutex_lock(&vector_clients_mutex);
-//    for (auto it: clients) {
-//        if (shutdown(it.second, SHUT_RDWR) == 0)
-//            std::cout << "success sock shutdown " << it.second << std::endl;
-//        else {
-//            std::cout << "error shutdown sock " << it.second << std::endl;
-//        }
-//        if (close(it.second) == 0)
-//            std::cout << "success sock close # " << it.second << std::endl;
-//        else
-//            std::cout << "error close sock # " << it.second << std::endl;
-//
-//        if (pthread_join(it.first, NULL) == 0)
-//            std::cout << "success join client # " << it.second << std::endl;
-//        else
-//            std::cout << "error join client # " << it.second << std::endl;
-//    }
-//    clients.clear();
-//    pthread_mutex_unlock(&vector_clients_mutex);
+
     std::cout << "server clients thread is done" << std::endl;
     pthread_exit(NULL);
 }
